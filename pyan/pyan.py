@@ -257,9 +257,7 @@ def main():
             )
             return
     else:
-        print(
-            "Cannot determine output format.  Stopping without creating any output."
-        )
+        print("Cannot determine output format.  Stopping without creating any output.")
         return
     # actually write file output
     writer.run()
