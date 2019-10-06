@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 """Graph markup writers."""
 
-import os
+import io
+import os.path
 import subprocess
 import sys
-import tempfile
 import logging
 
 
@@ -176,19 +176,15 @@ class DotRenderer(DotWriter):
         logger=None,
         tabstop=4,
     ):
-        self.dot_tempfile = None
         self.output_render = output
         self.output_format = output_format
 
         self.check_for_dot()
 
-        tmp_fh, self.dot_tempfile = tempfile.mkstemp()
-        os.close(tmp_fh)
-
         super().__init__(
             graph,
             options=options,
-            output=self.dot_tempfile,
+            output=None,
             logger=logger,
             tabstop=tabstop,
         )
@@ -201,7 +197,18 @@ class DotRenderer(DotWriter):
             raise NoDotError
 
     def run(self):
-        super().run()
+        self.log("%s running" % type(self))
+
+        self.outstream = io.StringIO()
+
+        self.start_graph()
+        self.write_subgraph(self.graph)
+        self.write_edges()
+        self.finish_graph()
+
+        dot_buffer = self.outstream.getvalue()
+        self.outstream.close()
+
         dot_options = ["-Granksep=1.5"]
         outfilename_base, _ = os.path.splitext(self.output_render)
         outfilename = outfilename_base + "." + self.output_format
@@ -210,11 +217,8 @@ class DotRenderer(DotWriter):
             *dot_options,
             "-T{}".format(self.output_format),
             "-o{}".format(outfilename),
-            self.dot_tempfile,
         ]
-        subprocess.run(cmd)
-        # remove temporary dot output file
-        os.remove(self.dot_tempfile)
+        subprocess.run(cmd, input=dot_buffer, text=True)
 
 
 class YedWriter(Writer):
