@@ -6,12 +6,13 @@
     This program takes one or more Python source files, does a superficial
     analysis, and constructs a directed graph of the objects in the combined
     source, and how they define or use each other.  The graph can be output
-    for rendering by e.g. GraphViz or yEd.
+    for rendering by e.g. Graphviz or yEd.
 """
 
 import argparse
 import logging
 from glob import glob
+import os.path
 import sys
 
 from pyan.analyzer import CallGraphVisitor
@@ -28,7 +29,6 @@ def process_command_line(argv):
         "approximate call graph of the modules, classes and functions"
         " within them."
     )
-    usage = """usage: %prog FILENAME... [--dot|--tgf|--yed]"""
 
     # initialize the parser object:
     parser = argparse.ArgumentParser(description=desc)
@@ -44,7 +44,7 @@ def process_command_line(argv):
         "--dot",
         action="store_true",
         default=False,
-        help="output in GraphViz dot format",
+        help="output in Graphviz dot format",
     )
     output_group.add_argument(
         "--tgf",
@@ -53,26 +53,30 @@ def process_command_line(argv):
         help="output in Trivial Graph Format",
     )
     output_group.add_argument(
-        "--yed", action="store_true", default=False, help="output in yEd GraphML Format"
+        "--yed", action="store_true", default=False, help="output in yEd GraphML format"
     )
     output_group.add_argument(
         "--svg",
         action="store_true",
         default=False,
-        help="try to run dot to make svg automatically",
+        help="output in svg format using 'dot'",
     )
     output_group.add_argument(
         "--png",
         action="store_true",
         default=False,
-        help="try to run dot to make png automatically",
+        help="output in png format using 'dot'",
     )
 
     parser.add_argument(
         "-f",
         "--file",
         dest="outfilename",
-        help="write graph to FILE",
+        help=(
+            "write graph to FILE.  If no file format switches are specified,"
+            " then the extension of FILE will be used to determine desired"
+            " output file format."
+        ),
         metavar="FILE",
         default=None,
     )
@@ -194,6 +198,27 @@ def process_command_line(argv):
     return args
 
 
+def get_out_format(args):
+    out_format = (
+        args.dot
+        and "dot"
+        or args.svg
+        and "svg"
+        or args.png
+        and "png"
+        or args.tgf
+        and "tgf"
+        or args.yed
+        and "yed"
+    )
+    if args.outfilename and not out_format:
+        out_format = os.path.splitext(args.outfilename)[1][1:]
+    if not out_format:
+        out_format = "dot"
+
+    return out_format
+
+
 def main():
     args = process_command_line(sys.argv)
 
@@ -215,6 +240,8 @@ def main():
         "annotated": args.annotated,
     }
 
+    out_format = get_out_format(args)
+
     # TODO: use an int argument for verbosity
     logger = logging.getLogger(__name__)
     if args.very_verbose:
@@ -231,39 +258,44 @@ def main():
     v = CallGraphVisitor(filenames, logger)
     graph = VisualGraph.from_visitor(v, options=graph_options, logger=logger)
 
-    if args.dot:
+    if out_format == "dot":
         writer = DotWriter(
             graph,
             options=["rankdir=" + args.rankdir],
             output=args.outfilename,
             logger=logger,
         )
-        writer.run()
-
-    if args.svg or args.png:
-        output_format = args.svg and "svg" or args.png and "png"
+    elif out_format == "tgf":
+        writer = TgfWriter(graph, output=args.outfilename, logger=logger)
+    elif out_format == "yed":
+        writer = YedWriter(graph, output=args.outfilename, logger=logger)
+    elif out_format in ["svg", "png"]:
         try:
-            renderer = DotRenderer(
+            writer = DotRenderer(
                 graph,
                 options=["rankdir=" + args.rankdir],
                 output=args.outfilename,
-                output_format=output_format,
+                output_format=out_format,
                 logger=logger,
             )
         except NoDotError:
             print(
-                "No executable 'dot' found in PATH.  Stopping without creating any output."
+                "No executable 'dot' found in PATH.  Stopping without creating"
+                " any output."
+            )
+            print(
+                "To enable this functionality, install Graphviz's dot utility"
+                " to your path."
             )
             return
-        renderer.run()
-
-    if args.tgf:
-        writer = TgfWriter(graph, output=args.outfilename, logger=logger)
-        writer.run()
-
-    if args.yed:
-        writer = YedWriter(graph, output=args.outfilename, logger=logger)
-        writer.run()
+    else:
+        print(
+            "Cannot determine output format.  Stopping without creating"
+            " any output."
+        )
+        return
+    # actually write file output
+    writer.run()
 
 
 if __name__ == "__main__":
