@@ -2,8 +2,15 @@
 # -*- coding: utf-8 -*-
 """Graph markup writers."""
 
+import os
+import subprocess
 import sys
+import tempfile
 import logging
+
+
+class NoDotError(Exception):
+    pass
 
 
 class Writer(object):
@@ -101,7 +108,7 @@ class TgfWriter(Writer):
 
 class DotWriter(Writer):
     def __init__(self, graph, options=None, output=None, logger=None, tabstop=4):
-        Writer.__init__(self, graph, output=output, logger=logger, tabstop=tabstop)
+        super().__init__(graph, output=output, logger=logger, tabstop=tabstop)
         options = options or []
         if graph.grouped:
             options += ['clusterrank="local"']
@@ -157,6 +164,57 @@ class DotWriter(Writer):
 
     def finish_graph(self):
         self.write("}")  # terminate "digraph G {"
+
+
+class DotRenderer(DotWriter):
+    def __init__(
+        self,
+        graph,
+        options=None,
+        output=None,
+        output_format=None,
+        logger=None,
+        tabstop=4,
+    ):
+        self.dot_tempfile = None
+        self.output_render = output
+        self.output_format = output_format
+
+        self.check_for_dot()
+
+        tmp_fh, self.dot_tempfile = tempfile.mkstemp()
+        os.close(tmp_fh)
+
+        super().__init__(
+            graph,
+            options=options,
+            output=self.dot_tempfile,
+            logger=logger,
+            tabstop=tabstop,
+        )
+
+    def check_for_dot(self):
+        dot_exe_check = subprocess.run(
+            ["dot", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        if dot_exe_check.returncode != 0:
+            raise NoDotError
+
+    def run(self):
+        super().run()
+        dot_options = ["-Granksep=1.5"]
+        outfilename_base, _ = os.path.splitext(self.output_render)
+        outfilename = outfilename_base + "." + self.output_format
+        cmd = [
+            "dot",
+            *dot_options,
+            "-T{}".format(self.output_format),
+            "-o{}".format(outfilename),
+            self.dot_tempfile,
+        ]
+        subprocess.run(cmd)
+        # remove temporary dot output file
+        os.remove(self.dot_tempfile)
 
 
 class YedWriter(Writer):

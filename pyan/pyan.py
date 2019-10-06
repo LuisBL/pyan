@@ -12,14 +12,11 @@
 import argparse
 import logging
 from glob import glob
-import subprocess
-import os
 import sys
-import tempfile
 
 from pyan.analyzer import CallGraphVisitor
 from pyan.visgraph import VisualGraph
-from pyan.writers import TgfWriter, DotWriter, YedWriter
+from pyan.writers import TgfWriter, DotWriter, YedWriter, DotRenderer, NoDotError
 
 
 def process_command_line(argv):
@@ -244,49 +241,21 @@ def main():
         writer.run()
 
     if args.svg or args.png:
-        dot_exe_check = subprocess.run(
-            ["dot", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        if dot_exe_check.returncode != 0:
+        output_format = args.svg and "svg" or args.png and "png"
+        try:
+            renderer = DotRenderer(
+                graph,
+                options=["rankdir=" + args.rankdir],
+                output=args.outfilename,
+                output_format=output_format,
+                logger=logger,
+            )
+        except NoDotError:
             print(
-                "Cannot find the 'dot' utility on path.  Exiting without writing files."
+                "No executable 'dot' found in PATH.  Stopping without creating any output."
             )
             return
-
-        tmp_fh, dot_tempfile = tempfile.mkstemp()
-        os.close(tmp_fh)
-        writer = DotWriter(
-            graph,
-            options=["rankdir=" + args.rankdir],
-            output=dot_tempfile,
-            logger=logger,
-        )
-        writer.run()
-        dot_options = ["-Granksep=1.5"]
-        outfilename_base, _ = os.path.splitext(args.outfilename)
-        if args.svg:
-            svg_filename = outfilename_base + ".svg"
-            cmd = [
-                "dot",
-                *dot_options,
-                "-Tsvg",
-                "-o{}".format(svg_filename),
-                dot_tempfile,
-            ]
-            subprocess.run(cmd)
-        if args.png:
-            png_filename = outfilename_base + ".png"
-            cmd = [
-                "dot",
-                *dot_options,
-                "-Tpng",
-                "-o{}".format(png_filename),
-                dot_tempfile,
-            ]
-            subprocess.run(cmd)
-
-        # remove temporary dot output file
-        os.remove(dot_tempfile)
+        renderer.run()
 
     if args.tgf:
         writer = TgfWriter(graph, output=args.outfilename, logger=logger)
