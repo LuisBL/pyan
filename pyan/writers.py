@@ -186,11 +186,7 @@ class DotRenderer(DotWriter):
         self.check_for_dot()
 
         super().__init__(
-            graph,
-            options=options,
-            output=None,
-            logger=logger,
-            tabstop=tabstop,
+            graph, options=options, output=None, logger=logger, tabstop=tabstop
         )
 
     def check_for_dot(self):

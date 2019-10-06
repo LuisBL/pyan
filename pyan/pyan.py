@@ -179,18 +179,10 @@ def process_command_line(argv):
     parser.add_argument(
         "-v",
         "--verbose",
-        action="store_true",
-        default=False,
+        action="count",
+        default=0,
         dest="verbose",
-        help="verbose output",
-    )
-    parser.add_argument(
-        "-V",
-        "--very-verbose",
-        action="store_true",
-        default=False,
-        dest="very_verbose",
-        help="even more verbose output (mainly for debug)",
+        help="verbose output. (Use twice for very verbose)",
     )
 
     args = parser.parse_args(argv)
@@ -242,11 +234,10 @@ def main():
 
     out_format = get_out_format(args)
 
-    # TODO: use an int argument for verbosity
     logger = logging.getLogger(__name__)
-    if args.very_verbose:
+    if args.verbose >= 2:
         logger.setLevel(logging.DEBUG)
-    elif args.verbose:
+    elif args.verbose == 1:
         logger.setLevel(logging.INFO)
     else:
         logger.setLevel(logging.WARN)
@@ -290,8 +281,7 @@ def main():
             return
     else:
         print(
-            "Cannot determine output format.  Stopping without creating"
-            " any output."
+            "Cannot determine output format.  Stopping without creating" " any output."
         )
         return
     # actually write file output
