@@ -15,6 +15,7 @@ from glob import glob
 import subprocess
 import os
 import sys
+import tempfile
 
 from pyan.analyzer import CallGraphVisitor
 from pyan.visgraph import VisualGraph
@@ -63,10 +64,17 @@ def process_command_line(argv):
         default=False,
         help="try to run dot to make svg automatically",
     )
+    output_group.add_argument(
+        "--png",
+        action="store_true",
+        default=False,
+        help="try to run dot to make png automatically",
+    )
+
     parser.add_argument(
         "-f",
         "--file",
-        dest="filename",
+        dest="outfilename",
         help="write graph to FILE",
         metavar="FILE",
         default=None,
@@ -226,27 +234,66 @@ def main():
     v = CallGraphVisitor(filenames, logger)
     graph = VisualGraph.from_visitor(v, options=graph_options, logger=logger)
 
-    if args.dot or args.svg:
+    if args.dot:
         writer = DotWriter(
             graph,
             options=["rankdir=" + args.rankdir],
-            output=args.filename,
+            output=args.outfilename,
             logger=logger,
         )
         writer.run()
-        if args.svg:
-            base, _ = os.path.splitext(args.filename)
-            svg = base + ".svg"
-            subprocess.run(
-                "dot -Tsvg {dot} > {svg}".format(dot=args.filename, svg=svg), shell=True
+
+    if args.svg or args.png:
+        dot_exe_check = subprocess.run(
+            ["dot", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        if dot_exe_check.returncode != 0:
+            print(
+                "Cannot find the 'dot' utility on path.  Exiting without writing files."
             )
+            return
+
+        tmp_fh, dot_tempfile = tempfile.mkstemp()
+        os.close(tmp_fh)
+        writer = DotWriter(
+            graph,
+            options=["rankdir=" + args.rankdir],
+            output=dot_tempfile,
+            logger=logger,
+        )
+        writer.run()
+        dot_options = ["-Granksep=1.5"]
+        outfilename_base, _ = os.path.splitext(args.outfilename)
+        if args.svg:
+            svg_filename = outfilename_base + ".svg"
+            cmd = [
+                "dot",
+                *dot_options,
+                "-Tsvg",
+                "-o{}".format(svg_filename),
+                dot_tempfile,
+            ]
+            subprocess.run(cmd)
+        if args.png:
+            png_filename = outfilename_base + ".png"
+            cmd = [
+                "dot",
+                *dot_options,
+                "-Tpng",
+                "-o{}".format(png_filename),
+                dot_tempfile,
+            ]
+            subprocess.run(cmd)
+
+        # remove temporary dot output file
+        os.remove(dot_tempfile)
 
     if args.tgf:
-        writer = TgfWriter(graph, output=args.filename, logger=logger)
+        writer = TgfWriter(graph, output=args.outfilename, logger=logger)
         writer.run()
 
     if args.yed:
-        writer = YedWriter(graph, output=args.filename, logger=logger)
+        writer = YedWriter(graph, output=args.outfilename, logger=logger)
         writer.run()
 
 
