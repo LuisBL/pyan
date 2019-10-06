@@ -37,21 +37,31 @@ def process_command_line(argv):
 
     # required arguments
     parser.add_argument("filename", nargs="+", help="Python files to process")
+
     # optional arguments
-    parser.add_argument(
+
+    # output formats
+    output_group = parser.add_mutually_exclusive_group()
+    output_group.add_argument(
         "--dot",
         action="store_true",
         default=False,
         help="output in GraphViz dot format",
     )
-    parser.add_argument(
+    output_group.add_argument(
         "--tgf",
         action="store_true",
         default=False,
         help="output in Trivial Graph Format",
     )
-    parser.add_argument(
+    output_group.add_argument(
         "--yed", action="store_true", default=False, help="output in yEd GraphML Format"
+    )
+    output_group.add_argument(
+        "--svg",
+        action="store_true",
+        default=False,
+        help="try to run dot to make svg automatically",
     )
     parser.add_argument(
         "-f",
@@ -61,6 +71,8 @@ def process_command_line(argv):
         metavar="FILE",
         default=None,
     )
+
+    # general options
     parser.add_argument(
         "-l", "--log", dest="logname", help="write log to LOG", metavar="LOG"
     )
@@ -80,7 +92,10 @@ def process_command_line(argv):
         dest="very_verbose",
         help="even more verbose output (mainly for debug)",
     )
-    parser.add_argument(
+
+    # drawing options
+    def_group = parser.add_mutually_exclusive_group()
+    def_group.add_argument(
         "-d",
         "--defines",
         action="store_true",
@@ -88,7 +103,7 @@ def process_command_line(argv):
         dest="draw_defines",
         help="add edges for 'defines' relationships [default]",
     )
-    parser.add_argument(
+    def_group.add_argument(
         "-n",
         "--no-defines",
         action="store_false",
@@ -96,7 +111,9 @@ def process_command_line(argv):
         dest="draw_defines",
         help="do not add edges for 'defines' relationships",
     )
-    parser.add_argument(
+
+    uses_group = parser.add_mutually_exclusive_group()
+    uses_group.add_argument(
         "-u",
         "--uses",
         action="store_true",
@@ -104,7 +121,7 @@ def process_command_line(argv):
         dest="draw_uses",
         help="add edges for 'uses' relationships [default]",
     )
-    parser.add_argument(
+    uses_group.add_argument(
         "-N",
         "--no-uses",
         action="store_false",
@@ -112,15 +129,9 @@ def process_command_line(argv):
         dest="draw_uses",
         help="do not add edges for 'uses' relationships",
     )
-    parser.add_argument(
-        "-c",
-        "--colored",
-        action="store_true",
-        default=False,
-        dest="colored",
-        help="color nodes according to namespace [dot only]",
-    )
-    parser.add_argument(
+
+    grouped_group = parser.add_mutually_exclusive_group()
+    grouped_group.add_argument(
         "-G",
         "--grouped-alt",
         action="store_true",
@@ -128,13 +139,22 @@ def process_command_line(argv):
         dest="grouped_alt",
         help="suggest grouping by adding invisible defines edges [only useful with --no-defines]",
     )
-    parser.add_argument(
+    grouped_group.add_argument(
         "-g",
         "--grouped",
         action="store_true",
         default=False,
         dest="grouped",
         help="group nodes (create subgraphs) according to namespace [dot only]",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--colored",
+        action="store_true",
+        default=False,
+        dest="colored",
+        help="color nodes according to namespace [dot only]",
     )
     parser.add_argument(
         "-e",
@@ -163,13 +183,7 @@ def process_command_line(argv):
         dest="annotated",
         help="annotate with module and source line number",
     )
-    parser.add_argument(
-        "--make-svg",
-        action="store_true",
-        default=False,
-        dest="make_svg",
-        help="try to run dot to make svg automatically",
-    )
+
     args = parser.parse_args(argv)
 
     return args
@@ -212,7 +226,7 @@ def main():
     v = CallGraphVisitor(filenames, logger)
     graph = VisualGraph.from_visitor(v, options=graph_options, logger=logger)
 
-    if args.dot:
+    if args.dot or args.svg:
         writer = DotWriter(
             graph,
             options=["rankdir=" + args.rankdir],
@@ -220,7 +234,7 @@ def main():
             logger=logger,
         )
         writer.run()
-        if args.make_svg:
+        if args.svg:
             base, _ = os.path.splitext(args.filename)
             svg = base + ".svg"
             subprocess.run(
