@@ -105,7 +105,7 @@ def process_command_line(argv):
         action="store_true",
         default=False,
         dest="grouped_alt",
-        help="suggest grouping by adding invisible defines edges [only useful with --no-defines]",
+        help="suggest grouping by adding invisible defines edges [only useful without --defines]",
     )
     grouped_group.add_argument(
         "-g",
