@@ -39,33 +39,15 @@ def process_command_line(argv):
     # optional arguments
 
     # output formats
-    output_group = parser.add_mutually_exclusive_group()
-    output_group.add_argument(
-        "--dot",
-        action="store_true",
-        default=False,
-        help="output in Graphviz dot format",
-    )
-    output_group.add_argument(
-        "--tgf",
-        action="store_true",
-        default=False,
-        help="output in Trivial Graph Format",
-    )
-    output_group.add_argument(
-        "--yed", action="store_true", default=False, help="output in yEd GraphML format"
-    )
-    output_group.add_argument(
-        "--svg",
-        action="store_true",
-        default=False,
-        help="output in svg format using 'dot'",
-    )
-    output_group.add_argument(
-        "--png",
-        action="store_true",
-        default=False,
-        help="output in png format using 'dot'",
+    parser.add_argument(
+        "--format",
+        help=(
+            "Output in FORMAT file format.  Especially useful when outputting"
+            " to stdout when no --file output file is specified."
+            " FORMAT may be one of:"
+            " png, svg, webp, pdf, eps, ps, dot (Graphviz),"
+            " tgf (Tivial Graph Format), yed (yEd GraphML)"
+        ),
     )
 
     parser.add_argument(
@@ -73,9 +55,9 @@ def process_command_line(argv):
         "--file",
         dest="outfilename",
         help=(
-            "write graph to FILE.  If no file format switches are specified,"
-            " then the extension of FILE will be used to determine desired"
-            " output file format."
+            "write graph to FILE.  If no file format is specified using the"
+            " --format option, then the extension of FILE will be used to"
+            " determine desired output file format."
         ),
         metavar="FILE",
         default=None,
@@ -209,7 +191,11 @@ def main():
         "annotated": args.annotated,
     }
 
-    out_format = get_out_format(args)
+    out_format = args.format
+    if args.outfilename and not args.format:
+        out_format = os.path.splitext(args.outfilename)[1][1:]
+    if not out_format:
+        out_format = "dot"
 
     logger = logging.getLogger(__name__)
     if args.verbose >= 2:
@@ -237,7 +223,7 @@ def main():
         writer = TgfWriter(graph, output=args.outfilename, logger=logger)
     elif out_format == "yed":
         writer = YedWriter(graph, output=args.outfilename, logger=logger)
-    elif out_format in ["svg", "png"]:
+    elif out_format in ["svg", "png", "eps", "pdf", "ps", "webp"]:
         try:
             writer = DotRenderer(
                 graph,
