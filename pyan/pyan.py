@@ -181,6 +181,7 @@ def main():
     filenames = args.filename
     if len(filenames) == 0:
         parser.error("Need one or more filenames to process")
+    filenames = [y for x in filenames for y in glob(x)]
 
     if args.nested_groups:
         args.grouped = True
