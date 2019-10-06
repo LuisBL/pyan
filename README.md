@@ -35,13 +35,13 @@ See `pyan --help`.
 
 Example:
 
-`pyan *.py --no-defines --grouped --annotated --file myuses.dot`
+`pyan *.py --grouped --annotated --file myuses.dot`
 
 If you have GraphViz's `dot` in your path, you can directly render to other formats:
 
-`pyan *.py --no-defines --grouped --annotated --file myuses.png`
+`pyan *.py --grouped --annotated --file myuses.png`
 
-`pyan *.py --no-defines --grouped --annotated --file myuses.svg`
+`pyan *.py --grouped --annotated --file myuses.svg`
 
 #### Troubleshooting
 
