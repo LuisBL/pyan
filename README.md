@@ -35,11 +35,13 @@ See `pyan --help`.
 
 Example:
 
-`pyan *.py --uses --no-defines --colored --grouped --annotated --dot >myuses.dot`
+`pyan *.py --no-defines --grouped --annotated --file myuses.dot`
 
-Then render using your favorite GraphViz filter, mainly `dot` or `fdp`:
+If you have GraphViz's `dot` in your path, you can directly render to other formats:
 
-`dot -Tsvg myuses.dot >myuses.svg`
+`pyan *.py --no-defines --grouped --annotated --file myuses.png`
+
+`pyan *.py --no-defines --grouped --annotated --file myuses.svg`
 
 #### Troubleshooting
 
