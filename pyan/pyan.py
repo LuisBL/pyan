@@ -82,34 +82,15 @@ def process_command_line(argv):
     )
 
     # drawing options
-    def_group = parser.add_mutually_exclusive_group()
-    def_group.add_argument(
+    parser.add_argument(
         "-d",
         "--defines",
         action="store_true",
-        default=True,
+        default=False,
         dest="draw_defines",
-        help="add edges for 'defines' relationships [default]",
+        help="add edges for 'defines' relationships",
     )
-    def_group.add_argument(
-        "-n",
-        "--no-defines",
-        action="store_false",
-        default=True,
-        dest="draw_defines",
-        help="do not add edges for 'defines' relationships",
-    )
-
-    uses_group = parser.add_mutually_exclusive_group()
-    uses_group.add_argument(
-        "-u",
-        "--uses",
-        action="store_true",
-        default=True,
-        dest="draw_uses",
-        help="add edges for 'uses' relationships [default]",
-    )
-    uses_group.add_argument(
+    parser.add_argument(
         "-N",
         "--no-uses",
         action="store_false",
@@ -117,7 +98,6 @@ def process_command_line(argv):
         dest="draw_uses",
         help="do not add edges for 'uses' relationships",
     )
-
     grouped_group = parser.add_mutually_exclusive_group()
     grouped_group.add_argument(
         "-G",
