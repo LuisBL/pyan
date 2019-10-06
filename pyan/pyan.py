@@ -82,20 +82,20 @@ def process_command_line(argv):
     )
     grouped_group = parser.add_mutually_exclusive_group()
     grouped_group.add_argument(
-        "-G",
-        "--grouped-alt",
-        action="store_true",
-        default=False,
-        dest="grouped_alt",
-        help="suggest grouping by adding invisible defines edges [only useful without --defines]",
-    )
-    grouped_group.add_argument(
         "-g",
         "--grouped",
         action="store_true",
         default=False,
         dest="grouped",
         help="group nodes (create subgraphs) according to namespace [dot only]",
+    )
+    grouped_group.add_argument(
+        "-G",
+        "--grouped-alt",
+        action="store_true",
+        default=False,
+        dest="grouped_alt",
+        help="suggest grouping by adding invisible defines edges [only useful without --defines]",
     )
 
     parser.add_argument(
