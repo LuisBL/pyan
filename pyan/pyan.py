@@ -137,12 +137,12 @@ def process_command_line(argv):
     )
 
     parser.add_argument(
-        "-c",
-        "--colored",
-        action="store_true",
-        default=False,
+        "-k",
+        "--uncolored",
+        action="store_false",
+        default=True,
         dest="colored",
-        help="color nodes according to namespace [dot only]",
+        help="do not color nodes according to namespace [dot only]",
     )
     parser.add_argument(
         "-e",
