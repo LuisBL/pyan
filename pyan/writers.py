@@ -3,7 +3,6 @@
 """Graph markup writers."""
 
 import io
-import os.path
 import subprocess
 import sys
 import logging
@@ -39,12 +38,17 @@ class Writer(object):
             self.outstream = open(self.output, "w")
         except TypeError:
             self.outstream = sys.stdout
+
+        self.create_graph()
+
+        if self.output:
+            self.outstream.close()
+
+    def create_graph(self):
         self.start_graph()
         self.write_subgraph(self.graph)
         self.write_edges()
         self.finish_graph()
-        if self.output:
-            self.outstream.close()
 
     def write_subgraph(self, graph):
         self.start_subgraph(graph)
@@ -200,23 +204,16 @@ class DotRenderer(DotWriter):
         self.log("%s running" % type(self))
 
         self.outstream = io.StringIO()
-
-        self.start_graph()
-        self.write_subgraph(self.graph)
-        self.write_edges()
-        self.finish_graph()
-
+        self.create_graph()
         dot_buffer = self.outstream.getvalue()
         self.outstream.close()
 
         dot_options = ["-Granksep=1.5"]
-        outfilename_base, _ = os.path.splitext(self.output_render)
-        outfilename = outfilename_base + "." + self.output_format
         cmd = [
             "dot",
             *dot_options,
             "-T{}".format(self.output_format),
-            "-o{}".format(outfilename),
+            "-o{}".format(self.output_render),
         ]
         subprocess.run(cmd, input=dot_buffer, text=True)
 
