@@ -152,27 +152,6 @@ def process_command_line(argv):
     return args
 
 
-def get_out_format(args):
-    out_format = (
-        args.dot
-        and "dot"
-        or args.svg
-        and "svg"
-        or args.png
-        and "png"
-        or args.tgf
-        and "tgf"
-        or args.yed
-        and "yed"
-    )
-    if args.outfilename and not out_format:
-        out_format = os.path.splitext(args.outfilename)[1][1:]
-    if not out_format:
-        out_format = "dot"
-
-    return out_format
-
-
 def main():
     args = process_command_line(sys.argv)
 
