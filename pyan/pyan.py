@@ -72,27 +72,6 @@ def process_command_line(argv):
         default=None,
     )
 
-    # general options
-    parser.add_argument(
-        "-l", "--log", dest="logname", help="write log to LOG", metavar="LOG"
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        dest="verbose",
-        help="verbose output",
-    )
-    parser.add_argument(
-        "-V",
-        "--very-verbose",
-        action="store_true",
-        default=False,
-        dest="very_verbose",
-        help="even more verbose output (mainly for debug)",
-    )
-
     # drawing options
     def_group = parser.add_mutually_exclusive_group()
     def_group.add_argument(
@@ -182,6 +161,27 @@ def process_command_line(argv):
         default=False,
         dest="annotated",
         help="annotate with module and source line number",
+    )
+
+    # general options
+    parser.add_argument(
+        "-l", "--log", dest="logname", help="write log to LOG", metavar="LOG"
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=False,
+        dest="verbose",
+        help="verbose output",
+    )
+    parser.add_argument(
+        "-V",
+        "--very-verbose",
+        action="store_true",
+        default=False,
+        dest="very_verbose",
+        help="even more verbose output (mainly for debug)",
     )
 
     args = parser.parse_args(argv)
