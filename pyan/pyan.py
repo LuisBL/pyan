@@ -115,6 +115,14 @@ def process_command_line(argv):
         help="create nested groups (subgraphs) for nested namespaces (implies -g) [dot only]",
     )
     parser.add_argument(
+        "-a",
+        "--annotated",
+        action="store_true",
+        default=False,
+        dest="annotated",
+        help="annotate with module and source line number",
+    )
+    parser.add_argument(
         "--dot-rankdir",
         default="TB",
         dest="rankdir",
@@ -124,14 +132,6 @@ def process_command_line(argv):
             "Allowed values: ['TB', 'LR', 'BT', 'RL']. "
             "[dot only]"
         ),
-    )
-    parser.add_argument(
-        "-a",
-        "--annotated",
-        action="store_true",
-        default=False,
-        dest="annotated",
-        help="annotate with module and source line number",
     )
 
     # general options
