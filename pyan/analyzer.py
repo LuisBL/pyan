@@ -332,7 +332,8 @@ class CallGraphVisitor(ast.NodeVisitor):
         for d in node.args.defaults:
             self.visit(d)
         for d in node.args.kw_defaults:
-            self.visit(d)
+            if d is not None:
+                self.visit(d)
         for stmt in node.body:
             self.visit(stmt)
 
@@ -896,9 +897,10 @@ class CallGraphVisitor(ast.NodeVisitor):
         ):  # handle correctly the most common trivial case "a1,a2,... = b1,b2,..."
             captured_values = []
             for value in values:
-                self.visit(value)  # RHS -> set self.last_value
-                captured_values.append(self.last_value)
-                self.last_value = None
+                if value is not None:
+                    self.visit(value)  # RHS -> set self.last_value
+                    captured_values.append(self.last_value)
+                    self.last_value = None
             for tgt, val in zip(targets, captured_values):
                 self.last_value = val
                 self.visit(tgt)  # LHS, name in a store context
@@ -1485,6 +1487,10 @@ class CallGraphVisitor(ast.NodeVisitor):
 
         Used for cleaning up forward-references once resolved.
         This prevents spurious edges due to expand_unknowns()."""
+
+        # see: https://github.com/Technologicat/pyan/commit/e3024d6e1a55fc7e1f5b184f7888db73e56acbbe
+        if name is None:
+            return
 
         if from_node not in self.uses_edges:  # no uses edges to remove
             return
