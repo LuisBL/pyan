@@ -6,6 +6,12 @@ Pyan takes one or more Python source files, performs a (rather superficial) stat
 
 *And now it is available for Python 3!*
 
+## Notes for this (itsayellow/pyan) fork
+
+### December 20, 2019
+pyan now is able to process python files with python type hints without crashing!
+
+## Notes from the previous fork
 Note: The previous Python 2-compatible version is tagged as `pre-python3`
 
 [![Example output](graph0.png "Example: GraphViz rendering of Pyan output (click for .svg)")](graph0.svg)
