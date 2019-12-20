@@ -614,9 +614,20 @@ class CallGraphVisitor(ast.NodeVisitor):
             self.analyze_binding(targets, values)
 
     def visit_AnnAssign(self, node):
-        self.visit_Assign(
-            self, node
-        )  # TODO: alias for now; add the annotations to output in a future version?
+        values = sanitize_exprs(
+            node.value
+        )  # values is the same for each set of targets
+
+        node.target = sanitize_exprs(node.target)
+        targets = node.target
+        self.logger.debug(
+            "Assign %s %s"
+            % (
+                [get_ast_node_name(x) for x in targets],
+                [get_ast_node_name(x) for x in values],
+            )
+        )
+        self.analyze_binding(targets, values)
 
     def visit_AugAssign(self, node):
         targets = sanitize_exprs(node.target)
