@@ -8,7 +8,7 @@ Pyan takes one or more Python source files, performs a (rather superficial) stat
 
 ## Installation
 
-Install pipx.
+Install [pipx](https://github.com/pipxproject/pipx).
 
 ```
 pip install pipx
