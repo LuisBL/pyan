@@ -6,6 +6,20 @@ Pyan takes one or more Python source files, performs a (rather superficial) stat
 
 *And now it is available for Python 3!*
 
+## Installation
+
+Install pipx.
+
+```
+pip install pipx
+```
+
+Install pyan.
+
+```
+pipx install git+https://github.com/itsayellow/pyan
+```
+
 ## Notes for this (itsayellow/pyan) fork
 
 ### December 20, 2019
